@@ -1,98 +1,57 @@
 #include "codexion.h"
 
-
-static long	ft_atol(char	*str)
+void	set_them(t_rules *rules, int *nums, char **av, int ac)
 {
-	long (sign), (result);
-	sign = 1;
-	result = 0;
-	if (!str || str[0] == '\0')
-		return (-1);
-	while (*str == 32 || (*str >= 9 && *str <= 13))
-		str++;
-	if (*str == '+' || *str == '-')
-	{
-		if (*str == '-')
-			sign = -1;
-		str++;
-	}
-	if (!(*str >= '0' && *str <= '9'))
-		return (-1);
-	while (*str && *str >= '0' && *str <= '9')
-	{
-		result = result * 10 + (*str - '0');
-		str++;
-	}
-	if (result * sign < INT_MIN || result * sign > INT_MAX)
-		return (-1);
+	rules->coders = nums[0];
+	rules->burnout = nums[1];
+	rules->compile = nums[2];
+	rules->debug = nums[3];
+	rules->refactor = nums[4];
+	rules->c_required = nums[5];
+	rules->cooldown = nums[6];
+	rules->done = 0;
+	if (strcmp(av[ac - 1], "fifo") == 0)
+		rules->scheduler = 1;
 	else
-		return (result * sign);
+		rules->scheduler = 0;
 }
 
-
-static void free_it(int **list)
+void	free_them(t_rules *r, t_coder *c, t_dongle *d)
 {
-	int	i;
-
-	i = 0;
-	while (i < 8)
-	{
-		free(list[i]);
-		i++;
-	}
-	free(list);
+	if (r)
+		free(r);
+	if (c)
+		free(c);
+	if (d)
+		free(d);
 }
 
-static int *parser(char **av)
+int	main(int ac, char **av)
 {
-    int i;
-	int	j;
-	int num;
-	int	*p;
+	t_rules	*p;
+	t_dongle	*d;
+	t_coder	*c;
+	int			*nums;
 
-	i = 1;
-	j = 0;
-	p = malloc(7 * sizeof(int));
-	if (!p)
-	{
-		free(p);
-		return(NULL);
-	}
-	while(av[i] && i != 8)
-    {
-        num = ft_atol(av[i]);
-        if (num < 0)
-		{
-            free_it(&p);
-			return (NULL);
-		}
-		p[j] = num;
-		j++;
-		i++;
-    }
-	return p;
-}
-
-void set_them(t_rule **rules, char **av)
-{
-	
-}
-int main(int ac, char **av)
-{
-    t_rule	*p;
-	int	*nums;
-	int	i;
-
-	i = 0;
-	if (ac != 9)
+	if (ac != 9 || av[1][0] == '0')
 		return (1);
-	if (!strcmp(av[ac - 1], "fifo") && !strcmp(av[ac - 1], "edf"))
-		return (1);
-	p = malloc(sizeof(t_rule));
-	if (!p)
+	if (strcmp(av[ac - 1], "fifo") != 0 && strcmp(av[ac - 1], "edf") != 0)
 		return (1);
 	nums = parser(av);
-
-	free(p);
+	if (!nums)
+		return (1);
+	p = malloc(sizeof(t_rules));
+	if (!p)
+		return (1);
+	set_them(p, nums, av, ac);
+	d = malloc(p->coders * sizeof(t_dongle));
+	c = malloc(p->coders * sizeof(t_coder));
+	if (!c || !d)
+	{
+		free_them(p, c, d);
+		return (1);
+	}
+	initialize(p, d, c);
+	free_them(p, c, d);
 	free(nums);
 }
