@@ -1,9 +1,9 @@
 #include "codexion.h"
 
-static int reached_max(int coders, t_coder *c)
+static int	reached_max(int coders, t_coder *c)
 {
 	int	i;
-	int check;
+	int	check;
 	int	compiles;
 
 	i = 0;
@@ -22,34 +22,54 @@ static int reached_max(int coders, t_coder *c)
 	return (0);
 }
 
-void  *superviser_routine(void *arg)
+static void	end_it(t_coder *c, int i, int check)
 {
-	int	i;
-	int	num;
-	long long last_time;
-	int	check;
-	t_coder *c;
+	long long	time;
+	int			j;
+
+	pthread_mutex_lock(&c[i].rules->state_mutex);
+	c[i].rules->done = 1;
+	pthread_mutex_unlock(&c[i].rules->state_mutex);
+	if (check == 1)
+		printf("All coders compiled successfully\n");
+	else
+	{
+		time = get_time() - c[i].rules->time;
+		printf("%lld %d %s\n", time, c[i].id, "burned out");
+	}
+	// j = 0;
+	// while (j < c[0].rules->coders)
+	// {
+	// 	pthread_mutex_lock(&c[j].l_dongle->mutex);
+	// 	pthread_cond_broadcast(&c[j].l_dongle->cond);
+	// 	pthread_mutex_unlock(&c[j].l_dongle->mutex);
+	// 	pthread_mutex_lock(&c[j].r_dongle->mutex);
+	// 	pthread_cond_broadcast(&c[j].r_dongle->cond);
+	// 	pthread_mutex_unlock(&c[j].r_dongle->mutex);
+	// 	j++;
+	// }
+}
+
+void	*superviser_routine(void *arg)
+{
+	int			i;
+	int			check;
+	long long	last_time;
+	t_coder		*c;
 
 	c = (t_coder *)arg;
-	num = c[0].rules->coders;	
 	while (1)
 	{
 		i = 0;
-		while (i < num)
+		while (i < c[0].rules->coders)
 		{
 			pthread_mutex_lock(&c[i].mutex);
 			last_time = get_time() - c[i].last_compile;
 			pthread_mutex_unlock(&c[i].mutex);
-			check = reached_max(num, c);
+			check = reached_max(c[0].rules->coders, c);
 			if ((last_time > c[i].rules->burnout) || check == 1)
 			{
-				pthread_mutex_lock(&c[i].rules->state_mutex);
-				c[i].rules->done = 1;
-				pthread_mutex_unlock(&c[i].rules->state_mutex);
-				if (check == 1)
-					printf("All coders compiled successfully\n");
-				else
-					printf("%lld %d %s\n", get_time() - c[i].rules->time, c[i].id, "burned out");
+				end_it(c, i, check);
 				return (NULL);
 			}
 			i++;
@@ -61,7 +81,7 @@ void  *superviser_routine(void *arg)
 void	initialize(t_rules *r, t_dongle *d, t_coder *c)
 {
 	struct timeval	tv;
-	pthread_t	sup;
+	pthread_t		sup;
 
 	gettimeofday(&tv, NULL);
 	pthread_mutex_init(&r->log_mutex, NULL);

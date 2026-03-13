@@ -2,10 +2,10 @@
 
 int	remove_coder(t_coder **c, int coders)
 {
-    int	i;
+	int	i;
 	int	id;
 
-    i = 0;
+	i = 0;
 	id = c[0]->id;
 	while (i < coders - 1)
 	{
@@ -15,17 +15,17 @@ int	remove_coder(t_coder **c, int coders)
 	return (id);
 }
 
-long long   get_time()
+long long	get_time(void)
 {
 	struct timeval	tv;
-	
+
 	gettimeofday(&tv, NULL);
 	return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
-int simulation_status(t_rules *r)
+int	simulation_status(t_rules *r)
 {
-	int status;
+	int	status;
 
 	pthread_mutex_lock(&r->state_mutex);
 	status = r->done;
@@ -33,7 +33,7 @@ int simulation_status(t_rules *r)
 	return (status);
 }
 
-void    log_it(t_coder *c, char *mssg)
+void	log_it(t_coder *c, char *mssg)
 {
 	pthread_mutex_lock(&c->rules->log_mutex);
 	if (simulation_status(c->rules) == 0)
@@ -51,7 +51,7 @@ void	wait(long long wait_time, t_coder *c)
 	while (c_time < wait_time)
 	{
 		if (c->rules->done == 1)
-			break;
+			break ;
 		usleep(500);
 		c_time = get_time();
 	}

@@ -44,9 +44,11 @@ int	has_char(char *str)
 
 int	*parser(char **av)
 {
+	int		*p;
 	long	num;
-	int	*p;
-	int (i), (j);
+	int		i;
+	int		j;
+
 	i = 1;
 	j = 0;
 	p = malloc(7 * sizeof(int));
@@ -63,9 +65,8 @@ int	*parser(char **av)
 			free(p);
 			return (NULL);
 		}
-		p[j] = num;
-		j++;
+		p[j++] = num;
 		i++;
 	}
-	return p;
+	return (p);
 }

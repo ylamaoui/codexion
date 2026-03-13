@@ -44,7 +44,7 @@ void	create_them(int coders, t_coder *c)
 	int	i;
 
 	i = 0;
-	while(i < coders)
+	while (i < coders)
 	{
 		pthread_create(&c[i].thread, NULL, coder_routine, &c[i]);
 		i++;
@@ -53,10 +53,10 @@ void	create_them(int coders, t_coder *c)
 
 void	join_them(int coders, t_coder *c)
 {
-	int i;
+	int	i;
 
 	i = 0;
-	while(i < coders)
+	while (i < coders)
 	{
 		pthread_join(c[i].thread, NULL);
 		i++;

@@ -3,6 +3,7 @@
 static void	lock_dongle(t_coder *c, t_dongle *d)
 {
 	long long	wait_cooldown;
+
 	pthread_mutex_lock(&d->mutex);
 	if (d->available == 1)
 	{
@@ -13,7 +14,8 @@ static void	lock_dongle(t_coder *c, t_dongle *d)
 	{
 		d->queue[d->count] = c;
 		d->count++;
-		while(d->available == 0 && d->next_owner != c->id)
+		while (d->available == 0 && d->next_owner != c->id
+			&& simulation_status(c->rules) == 0)
 			pthread_cond_wait(&d->cond, &d->mutex);
 		d->available = 0;
 		d->next_owner = 0;
@@ -23,7 +25,6 @@ static void	lock_dongle(t_coder *c, t_dongle *d)
 	if (wait_cooldown > get_time())
 		wait(wait_cooldown, c);
 	log_it(c, "has taken a dongle");
-
 }
 
 static void	compile(t_coder *c)
@@ -42,7 +43,7 @@ static void	debugg(t_coder *c)
 	wait(get_time() + c->rules->debug, c);
 }
 
-static void refactor(t_coder *c)
+static void	refactor(t_coder *c)
 {
 	log_it(c, "is refactoring");
 	wait(get_time() + c->rules->refactor, c);
@@ -53,18 +54,21 @@ void	*coder_routine(void *arg)
 	t_coder	*c;
 
 	c = (t_coder *)arg;
-	while(simulation_status(c->rules) == 0)
+	while (simulation_status(c->rules) == 0)
 	{
 		if (c->id % 2 == 0)
 		{
 			lock_dongle(c, c->l_dongle);
 			lock_dongle(c, c->r_dongle);
 		}
-		else
+		if (c->id % 2 != 0)
 		{
 			lock_dongle(c, c->r_dongle);
-			lock_dongle(c, c->l_dongle);
+			if (c->rules->coders != 1)
+				lock_dongle(c, c->l_dongle);
 		}
+		if (c->rules->coders == 1)
+			return (NULL);
 		compile(c);
 		unlock_dongles(c, c->l_dongle);
 		unlock_dongles(c, c->r_dongle);
